@@ -7,7 +7,7 @@ project_name: openkanso-agent
 builds:
   - id: openkanso-agent
     main: ./cmd/agent
-    binary: okagent
+    binary: openkanso-agent
     env:
       - CGO_ENABLED=0
     goos:
@@ -18,8 +18,8 @@ builds:
       - "-s -w"
 
 archives:
-  - format: binary
-    name_template: "okagent-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+  - formats: ["binary"]
+    name_template: "openkanso-agent_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
   name_template: "checksums.txt"
