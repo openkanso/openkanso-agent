@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +12,11 @@ import (
 )
 
 func main() {
+	serverBaseURL, ok := os.LookupEnv("SERVER_BASE_URL")
+	if !ok {
+		log.Fatal("Missing required environment variable: SERVER_BASE_URL")
+	}
+
 	client := &http.Client{
 		Timeout: 5 * time.Second,
 	}
@@ -18,13 +24,13 @@ func main() {
 	stopCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ticker.C:
-			pingController(client)
+			pingServer(client, serverBaseURL)
 
 		case <-stopCtx.Done():
 			log.Println("Stopping ping")
@@ -33,10 +39,10 @@ func main() {
 	}
 }
 
-func pingController(client *http.Client) {
+func pingServer(client *http.Client, baseURL string) {
 	req, err := http.NewRequest(
 		http.MethodGet,
-		"http://127.0.0.1:9440/ping",
+		fmt.Sprintf("%s/node/ping", baseURL),
 		nil,
 	)
 	if err != nil {
@@ -44,7 +50,8 @@ func pingController(client *http.Client) {
 		return
 	}
 
-	req.Header.Add("X-NodeID", "abc123")
+	req.Header.Set("X-NodeID", "abc123")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", "abc123"))
 
 	resp, err := client.Do(req)
 	if err != nil {
